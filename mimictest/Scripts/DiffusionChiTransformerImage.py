@@ -18,10 +18,10 @@ from mimictest.Evaluation import Evaluation
 
 if __name__ == '__main__':
     # Script-specific settings (general settings stored in 
-    mode = 'train' # or 'eval'
+    mode = 'eval' # or 'eval'
 
     # Saving path
-    save_path = './Save/'
+    save_path = './Save/DiffusionChiTrans/'
 
     # Dataset
     abs_mode = True # relative EE action space or absolute EE action space
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         file_name = 'image_abs.hdf5'
     else:
         file_name = 'image.hdf5'
-    dataset_path = f'/root/dataDisk/robomimic/datasets/square/ph/' + file_name
+    dataset_path = f'/home/robot/mimictest_ws/datasets/square/ph/' + file_name
     bs_per_gpu = 1280
     desired_rgb_shape = 84
     crop_shape = 76
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     # Training
     num_training_epochs = 5000
-    save_interval = 200 
+    save_interval = 2 
     load_epoch_id = 1000
     gradient_accumulation_steps = 1
     lr_max = 3e-4
@@ -138,6 +138,12 @@ if __name__ == '__main__':
     )
     if os.path.isfile(save_path+f'policy_{load_epoch_id}.pth'):
         policy.load_pretrained(acc, save_path+f'policy_{load_epoch_id}.pth')
+    elif os.path.isfile(save_path+'DiffusionTransformer.pth'):
+        print("use pretrain model!")
+        policy.load_pretrained(acc, save_path+'DiffusionTransformer.pth')
+    else: 
+        print("no pretrain model found")
+
     if os.path.isfile(save_path+'step.json'):
         with open(save_path+'step.json', 'r') as json_file:
             step = json.load(open(save_path+'step.json'))

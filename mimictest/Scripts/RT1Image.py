@@ -19,10 +19,10 @@ from mimictest.Evaluation import Evaluation
 
 if __name__ == '__main__':
     # Script-specific settings (general settings stored in 
-    mode = 'train' # 'train' or 'eval'
+    mode = 'eval' # 'train' or 'eval'
 
     # Saving path
-    save_path = './Save/'
+    save_path = './Save/RT1/'
 
     # Dataset
     abs_mode = True # relative EE action space or absolute EE action space
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         file_name = 'image_abs.hdf5'
     else:
         file_name = 'image.hdf5'
-    dataset_path = f'/root/dataDisk/robomimic/datasets/square/ph/' + file_name
+    dataset_path = f'/home/robot/mimictest_ws/datasets/square/ph/' + file_name
     bs_per_gpu = 432
     desired_rgb_shape = 84
     crop_shape = 76
@@ -122,6 +122,12 @@ if __name__ == '__main__':
     )
     if os.path.isfile(save_path+f'policy_{load_epoch_id}.pth'):
         policy.load_pretrained(acc, save_path+f'policy_{load_epoch_id}.pth')
+    elif os.path.isfile(save_path+'RT1.pth'):
+        print("use pretrain model!")
+        policy.load_pretrained(acc, save_path+'RT1.pth')
+    else: 
+        print("no pretrain model found")
+
     if os.path.isfile(save_path+'step.json'):
         with open(save_path+'step.json', 'r') as json_file:
             step = json.load(open(save_path+'step.json'))

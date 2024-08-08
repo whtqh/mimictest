@@ -47,14 +47,21 @@ def train(
     for epoch in range(num_training_epochs):
         if epoch % save_interval == 0:
             if epoch != 0: 
+                print("ready to save pretrained")
+                # policy.use_ema = False
                 # in the 1st epoch, policy.ema has not been initialized. You may also load the wrong ckpt and modify the right one
                 policy.save_pretrained(acc, save_path+f'policy_{epoch+load_epoch_id}.pth')
+                print(f"ready to eval with {num_eval_ep} eval workers")
+
+                # 默认训练时不需要保存视频，最后可以eval再存
                 avg_reward = torch.tensor(eva.evaluate_on_env(
                     policy, 
                     num_eval_ep, 
                     max_test_ep_len,
                 )).to(device)
+                print("torch.tenso to device")
                 avg_reward = acc.gather_for_metrics(avg_reward).mean(dim=0)
+                print("avg_reward = ", avg_reward)
 
         cum_recon_loss = torch.tensor(0).float().to(device)
         cum_load_time = 0 
@@ -65,6 +72,7 @@ def train(
             with acc.accumulate(policy.net):
                 policy.net.train()
                 optimizer.zero_grad()
+                # 归一化到float (0, 1)
                 rgbs = preprocessor.rgb_process(batch['rgbs'], train=True)
                 low_dims = preprocessor.low_dim_normalize(batch['low_dims'])
                 actions = preprocessor.action_normalize(batch['actions'])

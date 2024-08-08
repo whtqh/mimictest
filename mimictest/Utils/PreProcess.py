@@ -42,6 +42,7 @@ class PreProcess():
             abs_mode,
             device,
         ):
+        print(f"crop {crop_shape} in image {desired_rgb_shape}")
         self.train_transforms = torch.nn.Sequential(
             Resize([desired_rgb_shape, desired_rgb_shape], antialias=True),
             RandomCrop((crop_shape, crop_shape)),
@@ -66,10 +67,12 @@ class PreProcess():
                 rgb:    (..., c, h, w)
                         dtype = float32
         '''
+        print("in rgb process, rgb shape = ", rgb.shape)
         if train:
             rgb = self.train_transforms(rgb)
         else:
             rgb = self.eval_transforms(rgb)
+        print("after rgb process, rgb shape = ", rgb.shape)
         rgb = rgb.float()*(1/255.)
         return rgb
 

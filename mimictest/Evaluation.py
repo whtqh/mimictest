@@ -33,11 +33,14 @@ class Evaluation():
 
     def evaluate_on_env(self, policy, num_eval_ep, max_test_ep_len, save_path=None, record_video=False):
         if policy.use_ema:
+            print("use ema")
             policy.ema_net.eval()
         else:
+            print("net eval")
             policy.net.eval()
         total_rewards = np.zeros((self.num_envs)) 
         with torch.no_grad():
+            print("no grad")
             for ep in range(num_eval_ep):
                 self.cur_step = 0
                 self.chunk = np.zeros_like(self.chunk)
@@ -52,8 +55,11 @@ class Evaluation():
                 for t in range(max_test_ep_len):
                     # Add RGB image to placeholder 
                     rgb = np.stack((obs['agentview_image'], obs['robot0_eye_in_hand_image']), axis=1)
+                    print("rgb shape = ", rgb.shape)
+                    # rgb shape = (16, 2, 84, 84, 3)
                     rgb = torch.from_numpy(rgb)
                     rgb = rearrange(rgb, 'b v h w c -> b v c h w').contiguous()
+                    # 归一化到float (0, 1)
                     rgb = self.preprcs.rgb_process(rgb, train=False).to(self.device)
                     low_dim = np.concatenate((obs['robot0_eef_pos'], obs['robot0_eef_quat'], obs['robot0_gripper_qpos']), axis=1)
                     low_dim = torch.from_numpy(low_dim).float()
@@ -97,4 +103,7 @@ class Evaluation():
                         clip.write_gif(os.path.join(save_path, f'pid{os.getpid()}_episode{ep}_rank{env_id}_reward{rewards[env_id]}_agent.gif'), fps=30)
                         print(f'pid{os.getpid()}_video{ep}_rank{env_id}: reward {rewards[env_id]}')
             total_rewards /= num_eval_ep
+            print("total rewards = ", total_rewards)
+            print(f"total_rewards.mean = {total_rewards.mean()} in {num_eval_ep} cases")
+
         return total_rewards.mean() 

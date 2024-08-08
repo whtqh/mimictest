@@ -18,10 +18,10 @@ from mimictest.Evaluation import Evaluation
 
 if __name__ == '__main__':
     # Script-specific settings (general settings stored in 
-    mode = 'train' # or 'eval'
+    mode = 'eval' # or 'eval'
 
     # Saving path
-    save_path = './Save/'
+    save_path = './Save/DiffusionChiUNet/'
 
     # Dataset
     abs_mode = True # relative EE action space or absolute EE action space
@@ -29,10 +29,12 @@ if __name__ == '__main__':
         file_name = 'image_abs.hdf5'
     else:
         file_name = 'image.hdf5'
-    dataset_path = f'/root/dataDisk/robomimic/datasets/square/ph/' + file_name
-    bs_per_gpu = 640
-    desired_rgb_shape = 84
-    crop_shape = 76
+    dataset_path = f'/home/robot/mimictest_ws/datasets/square/ph/' + file_name
+    bs_per_gpu = 512
+
+    # 这里的84 和76不起作用？
+    desired_rgb_shape = 256
+    crop_shape = 225
     workers_per_gpu = 8
     cache_ratio = 2
 
@@ -61,7 +63,7 @@ if __name__ == '__main__':
 
     # Training
     num_training_epochs = 5000
-    save_interval = 200 
+    save_interval = 200
     load_epoch_id = 0
     gradient_accumulation_steps = 1
     lr_max = 3e-4
@@ -71,7 +73,7 @@ if __name__ == '__main__':
 
     # Testing (num_envs*num_eval_ep*num_GPU epochs)
     num_envs = 16
-    num_eval_ep = 8
+    num_eval_ep = 4
     test_chunk_size = 8
     max_test_ep_len = 50
     smooth_factor = 0.01
@@ -125,11 +127,19 @@ if __name__ == '__main__':
         loss_func=loss_func,
     )
     if os.path.isfile(save_path+f'policy_{load_epoch_id}.pth'):
+        print("load pretrained file:", save_path+f'policy_{load_epoch_id}.pth')
         policy.load_pretrained(acc, save_path+f'policy_{load_epoch_id}.pth')
+    elif os.path.isfile(save_path+'unet.pth'):
+        print("use pretrain model!")
+        policy.load_pretrained(acc, save_path+'unet.pth')
+    else: 
+        print("no pretrain model found")
     if os.path.isfile(save_path+'step.json'):
+        print("get step.json")
         with open(save_path+'step.json', 'r') as json_file:
             step = json.load(open(save_path+'step.json'))
     else:
+        print("step set to zero")
         step = 0
     optimizer = torch.optim.AdamW(policy.net.parameters(), lr=lr_max, weight_decay=weight_decay, fused=True)
     scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps)
@@ -143,6 +153,8 @@ if __name__ == '__main__':
     optimizer.step = AsyncStep
     prefetcher = DataPrefetcher(loader, device)
     envs = ParallelMimic(dataset_path, num_envs, abs_mode)
+
+    print("make evaluation env!!!!!!!!")
     eva = Evaluation(
         envs, 
         num_envs, 

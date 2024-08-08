@@ -14,6 +14,7 @@ def make_env_initializers(num_envs, env_meta):
     initializers = []
     for i in range(num_envs):
         def thunk():
+            # env = EnvUtils.create_env_for_data_processing(
             env = EnvUtils.create_env_from_metadata(
                 env_meta=env_meta,
                 env_name=env_meta["env_name"],
@@ -58,6 +59,7 @@ class ParallelMimic():
         if self.render:
             obs['agentview_image'] = np.flip(obs['agentview_image'], axis=1)
             obs['robot0_eye_in_hand_image'] = np.flip(obs['robot0_eye_in_hand_image'], axis=1)
+            print("obs shape = ", obs['agentview_image'].shape)
         return obs, rw, done, info
 
 if __name__ == '__main__':
